@@ -13,7 +13,7 @@ pipeline {
     GITDEPADD = 'git@github.com:pcmin929/deployment.git'
     GITCREDENTIAL = 'git_cre'
     // github credential 생성시의 ID
-    DOCKERHUB = 'oolralra/sbimage'
+    DOCKERHUB = '211.183.3.10:5000/myhttpd'
     DOCKERHUBCREDENTIAL = 'docker_cre' 
     // docker credential 생성시의 ID
   }
@@ -21,6 +21,8 @@ pipeline {
   stages {
     stage('Checkout Github') {
       steps {
+        slackSend (channel: '#jenkins', color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+
         checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [],
                   userRemoteConfigs: [[credentialsId: GITCREDENTIAL, url: GITWEBADD]]])
       }  
@@ -65,12 +67,9 @@ pipeline {
     }
     stage('docker image push') {
       steps {
-        withDockerRegistry(credentialsId: DOCKERHUBCREDENTIAL, url: '') {
-          // withDockerRegistry : docker pipeline 플러그인 설치시 사용가능.
-          // DOCKERHUBCREDENTIAL : environment에서 선언한 docker_cre  
             sh "docker push ${DOCKERHUB}:${currentBuild.number}"
             sh "docker push ${DOCKERHUB}:latest"
-        }
+        
 
       }
       post {
